@@ -1,0 +1,23 @@
+import { useState, useMemo } from "react";
+
+function App() {
+  const [price, setPrice] = useState(100);
+
+  const total = useMemo(() => price * 2, [price]);
+
+  return (
+    <div>
+      <h1>Inventory Management</h1>
+
+      <p>Price: ₹{price}</p>
+
+      <p>Total Value: ₹{total}</p>
+
+      <button onClick={() => setPrice(price + 100)}>
+        Add Item
+      </button>
+    </div>
+  );
+}
+
+export default App;
