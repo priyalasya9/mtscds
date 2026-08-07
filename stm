@@ -1,0 +1,414 @@
+Experiment 1: Selenium IDE Recording
+Install Selenium IDE Extension
+        ↓
+Open Selenium IDE
+        ↓
+Create New Project
+        ↓
+Add New Test Case
+        ↓
+Click Record 🔴
+        ↓
+Enter URL (google.com)
+        ↓
+Perform Actions:
+Click → Type → Enter → Click Result → Back
+        ↓
+Stop Recording
+        ↓
+Check Commands:
+open → click → type → assertTitle
+        ↓
+Run Test
+        ↓
+Save Project
+Experiment 2: Single Property Checkpoint
+Create Maven Project
+        ↓
+src/test/java
+        ↓
+Right Click
+        ↓
+New → Package
+        ↓
+Enter Package Name:
+com.test.selenium
+        ↓
+Create Package
+        ↓
+Right Click Package
+        ↓
+New → File
+        ↓
+Enter Java File Name
+        ↓
+Click Finish
+        ↓
+Write Selenium Code
+//commands(mvn clean compile)
+
+POM File:
+<dependencies>
+  <dependency>
+    <groupId>org.seleniumhq.selenium</groupId>
+    <artifactId>selenium-java</artifactId>
+    <version>4.34.0</version>
+</dependency>
+</dependencies>
+
+
+//Add Required Dependencies in pom.xml → Update Maven Project → Run the Java File → Check Output
+
+ package com.test.selenium; 
+import org.openqa.selenium.WebDriver; 
+import org.openqa.selenium.chrome.ChromeDriver; 
+public class Exp2_SinglePropertyCheckpoint { 
+public static void main(String[] args) throws InterruptedException { 
+WebDriver driver = new ChromeDriver(); 
+driver.get("https://www.google.com"); 
+String expectedTitle = "Google"; 
+String actualTitle = driver.getTitle(); 
+System.out.println("Actual Title   : " + actualTitle); 
+System.out.println("Expected Title : " + expectedTitle); 
+if (actualTitle.equals(expectedTitle)) { 
+System.out.println("PASS: Title is correct"); 
+} else { 
+System.out.println("FAIL: Title is incorrect"); 
+} 
+Thread.sleep(2000); 
+driver.quit(); 
+} 
+}
+
+
+
+
+
+Experiment 3: Single Object Checkpoint
+package com.test.selenium;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+
+public class Exp3_SingleObjectCheckpoint {
+    public static void main(String[] args) throws InterruptedException {
+        WebDriver driver = new ChromeDriver();
+        driver.get("https://www.google.com");
+        WebElement searchBox = driver.findElement(By.name("q"));
+        System.out.println("Displayed : " + searchBox.isDisplayed());
+        System.out.println("Enabled   : " + searchBox.isEnabled());
+        if (searchBox.isDisplayed() && searchBox.isEnabled()) {
+            System.out.println("PASS: Search box is ready");
+        } else {
+            System.out.println("FAIL: Search box is not ready");
+        }
+        Thread.sleep(2000);
+        driver.quit();
+    }
+}
+
+
+
+
+
+
+Experiment 4(a): Bitmap Checkpoint - Object Screenshot
+package com.test.selenium;
+import org.openqa.selenium.*;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.io.FileHandler;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+public class NewTest {
+    public static void main(String[] args) {
+        WebDriver driver = new ChromeDriver();
+        try {
+            driver.get("https://www.google.com");
+            WebElement searchBox = driver.findElement(By.name("q"));
+            File folder = new File("Screenshots");
+            if (!folder.exists()) {
+                folder.mkdir();
+            }
+            File currentImage = searchBox.getScreenshotAs(OutputType.FILE);
+            File currentFile =
+                    new File("Screenshots/current_searchbox.png");
+            FileHandler.copy(currentImage, currentFile);
+            System.out.println("Current Screenshot Saved");
+            System.out.println(currentFile.getAbsolutePath());
+            File baselineFile =
+                    new File("Screenshots/baseline_searchbox.png");
+            if (!baselineFile.exists()) {
+                System.out.println("Baseline image not found.");
+                System.out.println(
+                        "Rename current_searchbox.png to baseline_searchbox.png");
+            } else {
+                boolean result =
+                        compareImages(baselineFile, currentFile);
+                if (result) {
+                    System.out.println("BITMAP CHECKPOINT : TEST PASS");
+                    System.out.println("Images are identical.");
+                } else {
+                    System.out.println("BITMAP CHECKPOINT : TEST FAIL");
+                    System.out.println("Images are different.");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            driver.quit();
+        }
+    }
+    public static boolean compareImages(File img1, File img2)
+            throws Exception {
+        BufferedImage image1 = ImageIO.read(img1);
+        BufferedImage image2 = ImageIO.read(img2);
+        if (image1.getWidth() != image2.getWidth()
+                || image1.getHeight() != image2.getHeight()) {
+            return false;
+        }
+        for (int x = 0; x < image1.getWidth(); x++) {
+            for (int y = 0; y < image1.getHeight(); y++) {
+                if (image1.getRGB(x, y) != image2.getRGB(x, y)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+
+
+
+Experiment 4(b): Bitmap Checkpoint - Screen Area
+package com.test.selenium;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import javax.imageio.ImageIO;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+public class Exp4BitmapWindowCheckpoint {
+    public static void main(String[] args) throws Exception {
+        WebDriver driver = new ChromeDriver();
+        try {
+            // Maximize browser
+            driver.manage().window().maximize();
+            // Open Google
+            driver.get("https://www.google.com");
+            // Wait for page to load
+            Thread.sleep(3000);
+            // Capture full browser screenshot
+            File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+            BufferedImage fullImage = ImageIO.read(screenshot);
+            // Create Screenshot folder
+            File folder = new File("C:/SeleniumScreenshots");
+            if (!folder.exists()) {
+                folder.mkdirs();
+            }
+            // Crop top-left area (800 x 600)
+            int width = Math.min(800, fullImage.getWidth());
+            int height = Math.min(600, fullImage.getHeight());
+            BufferedImage currentArea = fullImage.getSubimage(0, 0, width, height);
+            // Save current screenshot
+            File currentFile =
+                    new File("C:/SeleniumScreenshots/current_google_area.png");
+            ImageIO.write(currentArea, "png", currentFile);
+            System.out.println("Current Screenshot Saved");
+            System.out.println(currentFile.getAbsolutePath());
+            // Baseline image
+            File baselineFile =
+                    new File("C:/SeleniumScreenshots/baseline_google_area.png");
+            if (!baselineFile.exists()) {
+                System.out.println("Baseline image not found.");
+                System.out.println(
+                        "Rename current_google_area.png to baseline_google_area.png");
+            } else {
+                BufferedImage baseline = ImageIO.read(baselineFile);
+                double similarity = compareImages(baseline, currentArea);
+                System.out.println("Image Similarity : "
+                        + String.format("%.2f", similarity) + "%");
+                if (similarity >= 95) {
+                    System.out.println("BITMAP CHECKPOINT : TEST PASS");
+                } else {
+                    System.out.println("BITMAP CHECKPOINT : TEST FAIL");
+                }
+            }
+        } finally {
+            driver.quit();
+        }
+    }
+    // Compare Images Pixel-by-Pixel
+    public static double compareImages(
+            BufferedImage img1,
+            BufferedImage img2) {
+        if (img1.getWidth() != img2.getWidth()
+                || img1.getHeight() != img2.getHeight()) {
+            return 0;
+        }
+        long totalPixels = (long) img1.getWidth() * img1.getHeight();
+        long samePixels = 0;
+        for (int x = 0; x < img1.getWidth(); x++) {
+            for (int y = 0; y < img1.getHeight(); y++) {
+                if (img1.getRGB(x, y) == img2.getRGB(x, y)) {
+                    samePixels++;
+                }
+            }
+        }
+        return ((double) samePixels / totalPixels) * 100;
+    }
+}
+
+
+Experiment 5: Database Checkpoint
+
+package com.test.selenium;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
+public class NewTest {
+    public static void main(String[] args) {
+        try {
+            // Connect to H2 Database
+            Connection con = DriverManager.getConnection(
+                    "jdbc:h2:./StudentDB",
+                    "sa",
+                    ""
+            );
+            Statement stmt = con.createStatement();
+            // Create Table
+            stmt.execute(
+                    "CREATE TABLE IF NOT EXISTS STUDENT(" +
+                    "ID INT PRIMARY KEY," +
+                    "NAME VARCHAR(50)," +
+                    "EMAIL VARCHAR(100))"
+            );
+            // Delete Previous Records
+            stmt.execute("DELETE FROM STUDENT");
+            // Insert Record
+            stmt.executeUpdate(
+                    "INSERT INTO STUDENT VALUES(1,'Ajay','ajay@gmail.com')"
+            );
+            // Verify Record
+            ResultSet rs =
+                    stmt.executeQuery(
+                            "SELECT * FROM STUDENT WHERE ID=1"
+                    );
+            if (rs.next()) {
+                System.out.println("Record Exists");
+                System.out.println("ID : " + rs.getInt("ID"));
+                System.out.println("Name : " + rs.getString("NAME"));
+                System.out.println("Email : " + rs.getString("EMAIL"));
+                System.out.println("TEST PASSED");
+            } else {
+                System.out.println("Record Not Found");
+                System.out.println("TEST FAILED");
+            }
+            con.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+POM File:
+<dependency> 
+<groupId>com.h2database</groupId> 
+<artifactId>h2</artifactId> 
+<version>2.4.240</version> 
+</dependency>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//Complete POM FILE:
+
+<project xmlns="https://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="https://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>4thyr</groupId>
+	<artifactId>1stsem</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-java</artifactId>
+			<version>4.34.0</version>
+		</dependency>
+	</dependencies>
+
+</project>
+
+
+
+
+
+2nd exp backup code:
+
+package com.test.selenium;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+public class Exp2_SinglePropertyCheckpoint 
+    public static void main(String[] args) throws InterruptedException {
+        WebDriver driver = new ChromeDriver();
+        driver.get("https://www.google.com");
+        String expectedTitle = "Google";
+        String actualTitle = driver.getTitle();
+        System.out.println("Actual Title : " + actualTitle);
+        System.out.println("Expected Title : " + expectedTitle);
+        if (actualTitle.equals(expectedTitle)) {
+            System.out.println("PASS: Title is correct");
+        } else {
+            System.out.println("FAIL: Title is incorrect");
+        }
+        Thread.sleep(2000);
+        driver.quit();
+    }
+}
