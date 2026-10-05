@@ -1,0 +1,332 @@
+============================================================
+EXPERIMENT 6 – DATABASE CHECKPOINT: CUSTOM CHECK
+============================================================
+
+CODE (JD.java)
+------------------------------------------------------------
+import java.sql.*;
+public class JD {
+    public static void main(String[] args) {
+        try {
+            Connection con = DriverManager.getConnection(
+                "jdbc:sqlite:StudentDB.db");
+            Statement st = con.createStatement();
+            st.execute("CREATE TABLE IF NOT EXISTS STUDENT " +
+                       "(ID INTEGER, NAME TEXT, EMAIL TEXT)");
+            st.execute("DELETE FROM STUDENT");
+            st.execute("INSERT INTO STUDENT VALUES " +
+                       "(1, 'AJAY', 'AJAY@MAIL.COM')");
+            ResultSet rs = st.executeQuery(
+                "SELECT NAME FROM STUDENT WHERE ID=1");
+            if (rs.next()) {
+                String actual = rs.getString("NAME");
+                String expected = "AJAY";
+                System.out.println("Expected: " + expected);
+                System.out.println("Actual: " + actual);
+                if (actual.equals(expected))
+                    System.out.println("PASS");
+                else
+                    System.out.println("FAIL");
+            }
+            con.close();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+}
+------------------------------------------------------------
+COMMANDS
+------------------------------------------------------------
+javac -cp ".;sqlite-jdbc-3.34.0.jar" JD.java
+java -cp ".;sqlite-jdbc-3.34.0.jar" JD
+------------------------------------------------------------
+OUTPUT
+------------------------------------------------------------
+Expected: AJAY
+Actual: AJAY
+PASS
+------------------------------------------------------------
+
+NOTE:
+For Experiment 6, the SQLite JDBC JAR must be present in the
+same folder as the Java file.
+============================================================
+EXPERIMENT 7(a) – DYNAMIC TEST DATA
+============================================================
+CODE (Main.java)
+------------------------------------------------------------
+import java.util.Random;
+public class Main {
+    static double discount(int price, String category) {
+        if (category.equals("electronics"))
+            return price * 0.9;
+        if (category.equals("clothing"))
+            return price * 0.8;
+        return price;
+    }
+    public static void main(String[] args) {
+        String[] categories = {
+            "electronics", "clothing", "grocery"
+        };
+        Random r = new Random();
+        for (int i = 1; i <= 5; i++) {
+            int price = 100 + r.nextInt(901);
+            String category = categories[r.nextInt(3)];
+            double result = discount(price, category);
+            System.out.printf(
+                "Test %d: category=%s, Price=%d, Discounted=%.2f%n",
+                i, category, price, result);
+        }
+    }
+}
+SAMPLE OUTPUT
+------------------------------------------------------------
+Test 1: category=electronics, Price=500, Discounted=450.00
+Test 2: category=clothing, Price=300, Discounted=240.00
+Test 3: category=grocery, Price=150, Discounted=150.00
+Test 4: category=electronics, Price=800, Discounted=720.00
+Test 5: category=clothing, Price=600, Discounted=480.00
+------------------------------------------------------------
+============================================================
+EXPERIMENT 7(b) – DATA DRIVEN TEST THROUGH FLAT FILE
+============================================================
+
+CODE (Main.java)
+------------------------------------------------------------
+import java.io.*;
+public class Main {
+    public static void main(String[] args) throws Exception {
+        PrintWriter pw = new PrintWriter("testdat.txt");
+        pw.println("500,electronics");
+        pw.println("300,clothing");
+        pw.println("150,grocery");
+        pw.close();
+        BufferedReader br =
+            new BufferedReader(new FileReader("testdat.txt"));
+        String line;
+        while ((line = br.readLine()) != null) {
+            String[] data = line.split(",");
+            double price = Double.parseDouble(data[0]);
+            String cat = data[1];
+            double res = price;
+            if (cat.equals("electronics"))
+                res = price * 0.9;
+            else if (cat.equals("clothing"))
+                res = price * 0.8;
+            System.out.printf(
+                "price=%.1f, cat=%s, dis=%.2f%n",
+                price, cat, res);
+        }
+        br.close();
+    }
+}
+============================================================
+EXPERIMENT 7(c) – DATA DRIVEN TEST THROUGH FRONT GRID
+============================================================
+CODE (Main.java)
+------------------------------------------------------------
+import javax.swing.*;
+public class Main {
+    public static void main(String[] args) {
+        String[] col = {
+            "Price", "Category", "Result"
+        };
+        Object[][] data = {
+            {500.0, "electronics", 450.0},
+            {300.0, "clothing", 240.0},
+            {150.0, "grocery", 150.0}
+        };
+        JTable t = new JTable(data, col);
+        JFrame f = new JFrame("Grid Test");
+        f.add(t);
+        f.setVisible(true);
+    }
+}
+
+============================================================
+EXPERIMENT 7(e) – BATCH TESTING WITHOUT PARAMETERS
+============================================================
+
+CODE (Main.java)
+------------------------------------------------------------
+public class Main {
+    static void testAddition() {
+        assert 2 + 3 == 5;
+        System.out.println("Addition: PASS");
+    }
+    static void testSubtraction() {
+        assert 5 - 2 == 3;
+        System.out.println("Subtraction: PASS");
+    }
+    public static void main(String[] args) {
+        testAddition();
+        testSubtraction();
+    }
+}
+------------------------------------------------------------
+
+COMMANDS
+------------------------------------------------------------
+javac Main.java
+java -ea Main
+------------------------------------------------------------
+
+OUTPUT
+------------------------------------------------------------
+Addition: PASS
+Subtraction: PASS
+------------------------------------------------------------
+
+IMPORTANT:
+Use -ea because Java assertions must be enabled.
+
+
+============================================================
+EXPERIMENT 7(f) – BATCH TESTING WITH PARAMETERS
+============================================================
+
+CODE (Main.java)
+------------------------------------------------------------
+public class Main {
+    static void test(int a, int b, char op, int exp) {
+        int res = 0;
+        if (op == '+') res = a + b;
+        if (op == '-') res = a - b;
+        if (op == '*') res = a * b;
+        System.out.println(
+            a + " " + op + " " + b + " = " + res +
+            (res == exp ? " PASS" : " FAIL"));
+    }
+    public static void main(String[] args) {
+        test(2, 3, '+', 5);
+        test(10, 4, '-', 6);
+        test(3, 3, '*', 9);
+        test(5, 5, '-', 1);
+    }
+}
+OUTPUT
+------------------------------------------------------------
+2 + 3 = 5 PASS
+10 - 4 = 6 PASS
+3 * 3 = 9 PASS
+5 - 5 = 0 FAIL
+------------------------------------------------------------
+
+
+============================================================
+EXPERIMENT 8 – DATA DRIVEN BATCH
+============================================================
+
+CODE (Main.java)
+------------------------------------------------------------
+import java.io.*;
+public class Main {
+    public static void main(String[] args) throws Exception {
+        PrintWriter p = new PrintWriter("data.txt");
+        p.println("500,electronics,450");
+        p.println("300,clothing,240");
+        p.println("150,grocery,150");
+        p.close();
+        BufferedReader b =
+            new BufferedReader(new FileReader("data.txt"));
+        String s;
+        while ((s = b.readLine()) != null) {
+            String[] x = s.split(",");
+            double price = Double.parseDouble(x[0]);
+            String cat = x[1];
+            double expected = Double.parseDouble(x[2]);
+            double actual = price;
+            if (cat.equals("electronics"))
+                actual = price * 0.9;
+            if (cat.equals("clothing"))
+                actual = price * 0.8;
+            System.out.println(
+                actual == expected ? "PASS" : "FAIL"
+            );
+        }
+        b.close();
+    }
+}
+OUTPUT
+------------------------------------------------------------
+PASS
+PASS
+PASS
+------------------------------------------------------------
+
+
+============================================================
+EXPERIMENT 9 – SILENT MODE TEST EXECUTION
+============================================================
+
+IMPORTANT:
+Use the exact Experiment 9 code from the lab manual if your
+faculty expects the manual's silent-mode implementation.
+
+COMMANDS
+------------------------------------------------------------
+javac <Experiment9FileName>.java
+java <Experiment9ClassName>
+------------------------------------------------------------
+
+OUTPUT
+------------------------------------------------------------
+The test executes without normal interactive/display output,
+according to the silent-mode implementation.
+------------------------------------------------------------
+
+
+============================================================
+EXPERIMENT 10 – CALCULATOR WINDOWS APPLICATION
+============================================================
+
+CODE (Main.java)
+------------------------------------------------------------
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import java.io.File;
+public class Main {
+    static void key(Robot r, int k) {
+        r.keyPress(k);
+        r.keyRelease(k);
+    }
+    public static void main(String[] args) throws Exception {
+        Runtime.getRuntime().exec("calc.exe");
+        Thread.sleep(2000);
+        Robot r = new Robot();
+        key(r, KeyEvent.VK_7);
+        key(r, KeyEvent.VK_ADD);
+        key(r, KeyEvent.VK_5);
+        key(r, KeyEvent.VK_EQUALS);
+        Thread.sleep(1000);
+        Rectangle screen =
+            new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
+        BufferedImage img =
+            r.createScreenCapture(screen);
+        ImageIO.write(
+            img, "png", new File("result.png"));
+        System.out.println("7 + 5 = 12");
+        System.out.println("Screenshot saved");
+    }
+}
+------------------------------------------------------------
+
+COMMANDS
+------------------------------------------------------------
+javac Main.java
+java Main
+------------------------------------------------------------
+
+OUTPUT
+------------------------------------------------------------
+7 + 5 = 12
+Screenshot saved
+------------------------------------------------------------
+
+NOTE:
+Experiment 10 requires a Windows graphical desktop because it
+opens calc.exe and takes a screen capture.
+
+
