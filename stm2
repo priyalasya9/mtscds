@@ -259,15 +259,34 @@ PASS
 EXPERIMENT 9 – SILENT MODE TEST EXECUTION
 ============================================================
 
-IMPORTANT:
-Use the exact Experiment 9 code from the lab manual if your
-faculty expects the manual's silent-mode implementation.
-
-COMMANDS
-------------------------------------------------------------
-javac <Experiment9FileName>.java
-java <Experiment9ClassName>
-------------------------------------------------------------
+import java.io.*;
+public class Main {
+    public static void main(String[] args) throws Exception {
+        PrintWriter p = new PrintWriter("data.txt");
+        p.println("500,electronics,450");
+        p.println("300,clothing,240");
+        p.println("150,grocery,150");
+        p.close();
+        BufferedReader b =
+            new BufferedReader(new FileReader("data.txt"));
+        String s;
+        while ((s = b.readLine()) != null) {
+            String[] x = s.split(",");
+            double price = Double.parseDouble(x[0]);
+            String cat = x[1];
+            double expected = Double.parseDouble(x[2]);
+            double actual = price;
+            if (cat.equals("electronics"))
+                actual = price * 0.9;
+            if (cat.equals("clothing"))
+                actual = price * 0.8;
+            System.out.println(
+                actual == expected ? "PASS" : "FAIL"
+            );
+        }
+        b.close();
+    }
+}
 
 OUTPUT
 ------------------------------------------------------------
